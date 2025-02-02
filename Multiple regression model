@@ -1,0 +1,38 @@
+# Rename columns for clarity
+df_analysis.columns = ["Political_Orientation", "Agreement_Statement_1", "Agreement_Statement_2"]
+
+# Ensure political orientation is correctly categorized into groups
+df_analysis["Political_Group"] = pd.cut(
+    df_analysis["Political_Orientation"],
+    bins=[-1, 3, 6, 10],
+    labels=["Right-Leaning (0-3)", "Movable Middle (4-6)", "Left-Leaning (7-10)"]
+)
+
+# Filter dataset to only include Treatment 2 participants
+df_treatment_2 = df_analysis.copy()
+
+# Perform multiple regression with interaction term
+import statsmodels.api as sm
+
+# Define independent variables (including interaction term)
+X_interaction = df_treatment_2[["Political_Orientation"]].copy()
+X_interaction["Treatment_2"] = 1  # Since we are only considering Treatment 2
+X_interaction["Interaction"] = X_interaction["Political_Orientation"] * X_interaction["Treatment_2"]
+
+# Define dependent variables
+Y1_interaction = df_treatment_2["Agreement_Statement_1"]
+Y2_interaction = df_treatment_2["Agreement_Statement_2"]
+
+# Add constant for intercept
+X_interaction = sm.add_constant(X_interaction)
+
+# Run regression for both dependent variables
+model1 = sm.OLS(Y1_interaction, X_interaction).fit()
+model2 = sm.OLS(Y2_interaction, X_interaction).fit()
+
+# Display regression results
+print("Regression Results for Statement 1 (Interaction Effect):\n")
+print(model1.summary())
+
+print("\nRegression Results for Statement 2 (Interaction Effect):\n")
+print(model2.summary())
